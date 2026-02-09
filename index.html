@@ -37,21 +37,33 @@
                 </div>
             </div>
 
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <button id="column-toggle-btn" class="btn btn-small">
+                        <span class="icon">&#9776;</span> Columns
+                    </button>
+                    <button id="clear-filters-btn" class="btn btn-small">Clear Filters</button>
+                </div>
+                <div class="toolbar-right">
+                    <span class="filter-info" id="filter-info"></span>
+                </div>
+            </div>
+
+            <div id="column-menu" class="column-menu hidden">
+                <div class="column-menu-header">
+                    <span>Show/Hide Columns</span>
+                    <button id="close-column-menu" class="btn-close">&times;</button>
+                </div>
+                <div id="column-checkboxes" class="column-checkboxes">
+                </div>
+            </div>
+
             <div class="table-container">
                 <table id="deadstock-table">
                     <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Description</th>
-                            <th>Supplier</th>
-                            <th>Last Issue</th>
-                            <th>Qty On Hand</th>
-                            <th>Unit Price</th>
-                            <th>Extended</th>
-                            <th>Restockable</th>
-                            <th>Disposition</th>
-                            <th>Qty to Bill</th>
-                            <th>Qty to Remove</th>
+                        <tr id="header-row">
+                        </tr>
+                        <tr id="filter-row">
                         </tr>
                     </thead>
                     <tbody id="deadstock-body">

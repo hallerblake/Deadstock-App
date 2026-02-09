@@ -2,35 +2,73 @@
 
 // Configuration - Update these endpoints with your actual API URLs
 const API_CONFIG = {
-    customersEndpoint: '/api/customers', // Replace with your customers API endpoint
-    deadstockEndpoint: '/api/deadstock', // Replace with your deadstock API endpoint
-    saveEndpoint: '/api/deadstock/save'  // Replace with your save API endpoint
+    customersEndpoint: '/api/customers',
+    deadstockEndpoint: '/api/deadstock',
+    saveEndpoint: '/api/deadstock/save'
 };
 
-// Disposition options matching the business process
+// Column definitions - ALL fields from JSON
+const COLUMNS = [
+    { key: 'itemid', label: 'Item ID', type: 'number', width: 80, visible: true, sortable: true },
+    { key: 'Item', label: 'Item', type: 'text', width: 120, visible: true, sortable: true },
+    { key: 'Description', label: 'Description', type: 'text', width: 180, visible: true, sortable: true },
+    { key: 'ExtendedDesc', label: 'Extended Desc', type: 'text', width: 180, visible: true, sortable: true },
+    { key: 'min', label: 'Min', type: 'number', width: 60, visible: true, sortable: true },
+    { key: 'max', label: 'Max', type: 'number', width: 60, visible: true, sortable: true },
+    { key: 'Restockable', label: 'Restockable', type: 'boolean', width: 100, visible: true, sortable: true },
+    { key: 'LastIssueDate', label: 'Last Issue Date', type: 'date', width: 120, visible: true, sortable: true },
+    { key: 'Price', label: 'Price', type: 'currency', width: 100, visible: true, sortable: true },
+    { key: 'SupplierName', label: 'Supplier', type: 'text', width: 150, visible: true, sortable: true },
+    { key: 'QtyOnHand', label: 'Qty On Hand', type: 'number', width: 100, visible: true, sortable: true },
+    { key: 'Disposition', label: 'Disposition', type: 'disposition', width: 180, visible: true, sortable: true },
+    { key: 'QtyToBill', label: 'Qty To Bill', type: 'input-number', width: 100, visible: true, sortable: true },
+    { key: 'QtyToRemove', label: 'Qty To Remove', type: 'input-number', width: 110, visible: true, sortable: true },
+    { key: 'QtyRemoved', label: 'Qty Removed', type: 'number', width: 100, visible: true, sortable: true },
+    { key: 'QtyUnreturnable', label: 'Qty Unreturnable', type: 'number', width: 120, visible: true, sortable: true },
+    { key: 'Status', label: 'Status', type: 'text', width: 100, visible: true, sortable: true },
+    { key: 'ReplenishmentModeId', label: 'Replenishment Mode', type: 'number', width: 140, visible: true, sortable: true }
+];
+
+// Disposition options
 const DISPOSITION_OPTIONS = [
     { value: '', label: '-- Select --' },
-    { value: 'invoice', label: 'Invoice & Convert (Non-Returnable)' },
-    { value: 'return', label: 'Return All Inventory' },
+    { value: 'invoice', label: 'Invoice & Convert' },
+    { value: 'return', label: 'Return All' },
     { value: 'keep', label: 'Keep (Bill & Convert)' }
 ];
 
 // State management
 let currentCustomerId = null;
 let deadstockItems = [];
-let originalItems = []; // For reset functionality
+let filteredItems = [];
+let originalItems = [];
+let columnConfig = [...COLUMNS];
+let filters = {};
+let sortColumn = null;
+let sortDirection = 'asc';
+let resizingColumn = null;
+let startX = 0;
+let startWidth = 0;
 
 // DOM Elements
 const customerDropdown = document.getElementById('customer-dropdown');
 const loadingIndicator = document.getElementById('loading-indicator');
 const deadstockContent = document.getElementById('deadstock-content');
 const deadstockBody = document.getElementById('deadstock-body');
+const headerRow = document.getElementById('header-row');
+const filterRow = document.getElementById('filter-row');
 const noDataMessage = document.getElementById('no-data-message');
 const totalItemsEl = document.getElementById('total-items');
 const totalValueEl = document.getElementById('total-value');
 const pendingDecisionsEl = document.getElementById('pending-decisions');
 const saveBtn = document.getElementById('save-btn');
 const resetBtn = document.getElementById('reset-btn');
+const columnToggleBtn = document.getElementById('column-toggle-btn');
+const columnMenu = document.getElementById('column-menu');
+const columnCheckboxes = document.getElementById('column-checkboxes');
+const closeColumnMenuBtn = document.getElementById('close-column-menu');
+const clearFiltersBtn = document.getElementById('clear-filters-btn');
+const filterInfo = document.getElementById('filter-info');
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', init);
@@ -38,24 +76,67 @@ document.addEventListener('DOMContentLoaded', init);
 function init() {
     loadCustomers();
     setupEventListeners();
+    buildColumnMenu();
 }
 
 function setupEventListeners() {
     customerDropdown.addEventListener('change', handleCustomerChange);
     saveBtn.addEventListener('click', handleSave);
     resetBtn.addEventListener('click', handleReset);
+    columnToggleBtn.addEventListener('click', toggleColumnMenu);
+    closeColumnMenuBtn.addEventListener('click', () => columnMenu.classList.add('hidden'));
+    clearFiltersBtn.addEventListener('click', clearAllFilters);
+
+    // Close column menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!columnMenu.contains(e.target) && e.target !== columnToggleBtn) {
+            columnMenu.classList.add('hidden');
+        }
+    });
+
+    // Column resizing
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+}
+
+// Build column visibility menu
+function buildColumnMenu() {
+    columnCheckboxes.innerHTML = '';
+    columnConfig.forEach((col, index) => {
+        const div = document.createElement('div');
+        div.className = 'column-checkbox-item';
+        div.innerHTML = `
+            <input type="checkbox" id="col-${col.key}" ${col.visible ? 'checked' : ''}
+                   onchange="toggleColumnVisibility('${col.key}', this.checked)">
+            <label for="col-${col.key}">${col.label}</label>
+        `;
+        columnCheckboxes.appendChild(div);
+    });
+}
+
+function toggleColumnMenu(e) {
+    e.stopPropagation();
+    const rect = columnToggleBtn.getBoundingClientRect();
+    columnMenu.style.top = (rect.bottom + 5) + 'px';
+    columnMenu.style.left = rect.left + 'px';
+    columnMenu.classList.toggle('hidden');
+}
+
+// Toggle column visibility
+function toggleColumnVisibility(key, visible) {
+    const col = columnConfig.find(c => c.key === key);
+    if (col) {
+        col.visible = visible;
+        renderTableHeaders();
+        renderTable();
+    }
 }
 
 // Load customers for dropdown
 async function loadCustomers() {
     try {
-        // For demo purposes, using mock data
-        // Replace this with actual API call:
-        // const response = await fetch(API_CONFIG.customersEndpoint);
-        // const customers = await response.json();
-
+        // Replace with actual API call
         const customers = getMockCustomers();
-
         customers.forEach(customer => {
             const option = document.createElement('option');
             option.value = customer.id;
@@ -71,32 +152,30 @@ async function loadCustomers() {
 // Handle customer selection change
 async function handleCustomerChange(e) {
     const customerId = e.target.value;
-
     if (!customerId) {
         hideContent();
         return;
     }
-
     currentCustomerId = customerId;
     await loadDeadstockItems(customerId);
 }
 
-// Load deadstock items for selected customer
+// Load deadstock items
 async function loadDeadstockItems(customerId) {
     showLoading(true);
     hideContent();
 
     try {
-        // For demo purposes, using mock data
-        // Replace this with actual API call:
-        // const response = await fetch(`${API_CONFIG.deadstockEndpoint}?customerId=${customerId}`);
-        // const data = await response.json();
-
+        // Replace with actual API call
         const data = getMockDeadstockItems();
 
         if (data && data.length > 0) {
             deadstockItems = data.map(item => ({ ...item }));
             originalItems = JSON.parse(JSON.stringify(data));
+            filteredItems = [...deadstockItems];
+            filters = {};
+            sortColumn = null;
+            renderTableHeaders();
             renderTable();
             updateSummary();
             showContent();
@@ -112,113 +191,312 @@ async function loadDeadstockItems(customerId) {
     }
 }
 
-// Render the deadstock table
+// Render table headers with sort and resize
+function renderTableHeaders() {
+    headerRow.innerHTML = '';
+    filterRow.innerHTML = '';
+
+    const visibleColumns = columnConfig.filter(c => c.visible);
+
+    visibleColumns.forEach((col, index) => {
+        // Header cell
+        const th = document.createElement('th');
+        th.className = col.sortable ? 'sortable' : '';
+        th.style.width = col.width + 'px';
+        th.dataset.key = col.key;
+
+        if (sortColumn === col.key) {
+            th.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+
+        th.innerHTML = `
+            <span class="header-text">${col.label}</span>
+            <span class="sort-indicator"></span>
+            <div class="column-resizer" data-key="${col.key}"></div>
+        `;
+
+        if (col.sortable) {
+            th.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('column-resizer')) {
+                    handleSort(col.key);
+                }
+            });
+        }
+
+        // Resizer event
+        const resizer = th.querySelector('.column-resizer');
+        resizer.addEventListener('mousedown', (e) => startResize(e, col.key));
+
+        headerRow.appendChild(th);
+
+        // Filter cell
+        const filterTh = document.createElement('th');
+        filterTh.style.width = col.width + 'px';
+
+        if (col.type !== 'disposition' && col.type !== 'input-number') {
+            filterTh.innerHTML = `
+                <input type="text" class="filter-input"
+                       placeholder="Filter..."
+                       data-key="${col.key}"
+                       value="${filters[col.key] || ''}"
+                       onkeyup="handleFilter('${col.key}', this.value)">
+            `;
+        }
+        filterRow.appendChild(filterTh);
+    });
+}
+
+// Handle sorting
+function handleSort(key) {
+    if (sortColumn === key) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn = key;
+        sortDirection = 'asc';
+    }
+    applyFiltersAndSort();
+    renderTableHeaders();
+    renderTable();
+}
+
+// Handle filtering
+function handleFilter(key, value) {
+    filters[key] = value.toLowerCase();
+    applyFiltersAndSort();
+    renderTable();
+    updateFilterInfo();
+}
+
+// Clear all filters
+function clearAllFilters() {
+    filters = {};
+    document.querySelectorAll('.filter-input').forEach(input => input.value = '');
+    applyFiltersAndSort();
+    renderTable();
+    updateFilterInfo();
+    showToast('Filters cleared', 'info');
+}
+
+// Apply filters and sorting
+function applyFiltersAndSort() {
+    // Filter
+    filteredItems = deadstockItems.filter(item => {
+        return Object.keys(filters).every(key => {
+            if (!filters[key]) return true;
+            const value = String(item[key] || '').toLowerCase();
+            return value.includes(filters[key]);
+        });
+    });
+
+    // Sort
+    if (sortColumn) {
+        const col = columnConfig.find(c => c.key === sortColumn);
+        filteredItems.sort((a, b) => {
+            let aVal = a[sortColumn];
+            let bVal = b[sortColumn];
+
+            // Handle nulls
+            if (aVal == null) aVal = '';
+            if (bVal == null) bVal = '';
+
+            // Type-specific comparison
+            if (col.type === 'number' || col.type === 'currency' || col.type === 'input-number') {
+                aVal = parseFloat(aVal) || 0;
+                bVal = parseFloat(bVal) || 0;
+            } else if (col.type === 'date') {
+                aVal = new Date(aVal) || new Date(0);
+                bVal = new Date(bVal) || new Date(0);
+            } else {
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+            }
+
+            if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
+    updateSummary();
+}
+
+// Update filter info display
+function updateFilterInfo() {
+    const activeFilters = Object.keys(filters).filter(k => filters[k]);
+    if (activeFilters.length > 0) {
+        filterInfo.textContent = `Showing ${filteredItems.length} of ${deadstockItems.length} items`;
+    } else {
+        filterInfo.textContent = '';
+    }
+}
+
+// Column resizing
+function startResize(e, key) {
+    e.stopPropagation();
+    resizingColumn = key;
+    startX = e.pageX;
+    const col = columnConfig.find(c => c.key === key);
+    startWidth = col.width;
+    document.body.style.cursor = 'col-resize';
+    e.target.classList.add('resizing');
+}
+
+function handleMouseMove(e) {
+    if (!resizingColumn) return;
+    const diff = e.pageX - startX;
+    const col = columnConfig.find(c => c.key === resizingColumn);
+    const newWidth = Math.max(50, startWidth + diff);
+    col.width = newWidth;
+
+    // Update column width in DOM
+    const headerTh = headerRow.querySelector(`th[data-key="${resizingColumn}"]`);
+    if (headerTh) headerTh.style.width = newWidth + 'px';
+
+    const filterTh = filterRow.children[columnConfig.filter(c => c.visible).findIndex(c => c.key === resizingColumn)];
+    if (filterTh) filterTh.style.width = newWidth + 'px';
+}
+
+function handleMouseUp() {
+    if (resizingColumn) {
+        document.body.style.cursor = '';
+        document.querySelectorAll('.column-resizer').forEach(r => r.classList.remove('resizing'));
+        resizingColumn = null;
+        renderTable(); // Re-render to apply new widths to body cells
+    }
+}
+
+// Render the table body
 function renderTable() {
     deadstockBody.innerHTML = '';
+    const visibleColumns = columnConfig.filter(c => c.visible);
 
-    deadstockItems.forEach((item, index) => {
-        const row = createTableRow(item, index);
+    filteredItems.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.dataset.itemid = item.itemid;
+
+        visibleColumns.forEach(col => {
+            const td = document.createElement('td');
+            td.style.width = col.width + 'px';
+            td.innerHTML = renderCell(item, col, index);
+            row.appendChild(td);
+        });
+
         deadstockBody.appendChild(row);
     });
 }
 
-// Create a table row for an item
-function createTableRow(item, index) {
-    const row = document.createElement('tr');
-    row.dataset.index = index;
+// Render individual cell
+function renderCell(item, col, index) {
+    const value = item[col.key];
+    const itemIndex = deadstockItems.findIndex(i => i.itemid === item.itemid);
 
-    const extendedValue = item.QtyOnHand * item.Price;
-    const isRestockable = item.Restockable === 1;
+    switch (col.type) {
+        case 'currency':
+            return `<span class="currency">${formatCurrency(value)}</span>`;
 
-    row.innerHTML = `
-        <td><span class="item-code">${escapeHtml(item.Item)}</span></td>
-        <td class="description-cell">
-            <div class="main">${escapeHtml(item.Description)}</div>
-            <div class="extended">${escapeHtml(item.ExtendedDesc || '')}</div>
-        </td>
-        <td>${escapeHtml(item.SupplierName)}</td>
-        <td>${formatDate(item.LastIssueDate)}</td>
-        <td style="text-align: center;">${item.QtyOnHand}</td>
-        <td class="currency">${formatCurrency(item.Price)}</td>
-        <td class="currency">${formatCurrency(extendedValue)}</td>
-        <td class="${isRestockable ? 'restockable-yes' : 'restockable-no'}">
-            ${isRestockable ? 'Yes' : 'No'}
-        </td>
-        <td>
-            <select class="disposition-select" data-index="${index}" onchange="handleDispositionChange(${index}, this.value)">
-                ${DISPOSITION_OPTIONS.map(opt => `
-                    <option value="${opt.value}" ${item.Disposition === opt.value ? 'selected' : ''}>
-                        ${opt.label}
-                    </option>
-                `).join('')}
-            </select>
-        </td>
-        <td>
-            <input type="number"
-                   class="qty-input"
-                   data-index="${index}"
-                   data-field="QtyToBill"
-                   value="${item.QtyToBill || item.QtyOnHand}"
-                   min="0"
-                   max="${item.QtyOnHand}"
-                   ${!item.Disposition || item.Disposition === 'return' ? 'disabled' : ''}
-                   onchange="handleQtyChange(${index}, 'QtyToBill', this.value)">
-        </td>
-        <td>
-            <input type="number"
-                   class="qty-input"
-                   data-index="${index}"
-                   data-field="QtyToRemove"
-                   value="${item.QtyToRemove || ''}"
-                   min="0"
-                   max="${item.QtyOnHand}"
-                   ${item.Disposition !== 'return' ? 'disabled' : ''}
-                   onchange="handleQtyChange(${index}, 'QtyToRemove', this.value)">
-        </td>
-    `;
+        case 'number':
+            return `<span class="number-cell">${value ?? ''}</span>`;
 
-    return row;
+        case 'boolean':
+            const isTrue = value === 1 || value === true;
+            return `<span class="${isTrue ? 'restockable-yes' : 'restockable-no'}">${isTrue ? 'Yes' : 'No'}</span>`;
+
+        case 'date':
+            return formatDate(value);
+
+        case 'disposition':
+            const selectClass = item.Disposition ? `disposition-select ${item.Disposition}` : 'disposition-select';
+            return `
+                <select class="${selectClass}" data-itemid="${item.itemid}" onchange="handleDispositionChange(${item.itemid}, this.value)">
+                    ${DISPOSITION_OPTIONS.map(opt => `
+                        <option value="${opt.value}" ${item.Disposition === opt.value ? 'selected' : ''}>
+                            ${opt.label}
+                        </option>
+                    `).join('')}
+                </select>
+            `;
+
+        case 'input-number':
+            const isQtyToBill = col.key === 'QtyToBill';
+            const isQtyToRemove = col.key === 'QtyToRemove';
+            let disabled = true;
+            let displayValue = value ?? '';
+
+            if (item.Disposition === 'invoice' || item.Disposition === 'keep') {
+                if (isQtyToBill) disabled = false;
+            } else if (item.Disposition === 'return') {
+                if (isQtyToRemove) disabled = false;
+            }
+
+            return `
+                <input type="number" class="qty-input"
+                       data-itemid="${item.itemid}"
+                       data-field="${col.key}"
+                       value="${displayValue}"
+                       min="0" max="${item.QtyOnHand || 999}"
+                       ${disabled ? 'disabled' : ''}
+                       onchange="handleQtyChange(${item.itemid}, '${col.key}', this.value)">
+            `;
+
+        case 'text':
+        default:
+            return `<span title="${escapeHtml(value || '')}">${escapeHtml(value || '')}</span>`;
+    }
 }
 
-// Handle disposition dropdown change
-function handleDispositionChange(index, value) {
-    const item = deadstockItems[index];
+// Handle disposition change
+function handleDispositionChange(itemId, value) {
+    const item = deadstockItems.find(i => i.itemid === itemId);
+    if (!item) return;
+
     item.Disposition = value;
 
-    // Update the select styling
-    const select = document.querySelector(`select[data-index="${index}"]`);
-    select.className = 'disposition-select';
-    if (value) {
-        select.classList.add(value);
+    // Update select styling
+    const select = document.querySelector(`select[data-itemid="${itemId}"]`);
+    if (select) {
+        select.className = 'disposition-select';
+        if (value) select.classList.add(value);
     }
 
-    // Enable/disable quantity fields based on disposition
-    const qtyToBillInput = document.querySelector(`input[data-index="${index}"][data-field="QtyToBill"]`);
-    const qtyToRemoveInput = document.querySelector(`input[data-index="${index}"][data-field="QtyToRemove"]`);
+    // Update quantity fields
+    const qtyToBillInput = document.querySelector(`input[data-itemid="${itemId}"][data-field="QtyToBill"]`);
+    const qtyToRemoveInput = document.querySelector(`input[data-itemid="${itemId}"][data-field="QtyToRemove"]`);
 
     switch (value) {
         case 'invoice':
         case 'keep':
-            qtyToBillInput.disabled = false;
-            qtyToRemoveInput.disabled = true;
-            qtyToBillInput.value = item.QtyOnHand;
-            qtyToRemoveInput.value = '';
+            if (qtyToBillInput) {
+                qtyToBillInput.disabled = false;
+                qtyToBillInput.value = item.QtyOnHand;
+            }
+            if (qtyToRemoveInput) {
+                qtyToRemoveInput.disabled = true;
+                qtyToRemoveInput.value = '';
+            }
             item.QtyToBill = item.QtyOnHand;
             item.QtyToRemove = '';
             break;
         case 'return':
-            qtyToBillInput.disabled = true;
-            qtyToRemoveInput.disabled = false;
-            qtyToBillInput.value = '';
-            qtyToRemoveInput.value = item.QtyOnHand;
+            if (qtyToBillInput) {
+                qtyToBillInput.disabled = true;
+                qtyToBillInput.value = '';
+            }
+            if (qtyToRemoveInput) {
+                qtyToRemoveInput.disabled = false;
+                qtyToRemoveInput.value = item.QtyOnHand;
+            }
             item.QtyToBill = '';
             item.QtyToRemove = item.QtyOnHand;
             break;
         default:
-            qtyToBillInput.disabled = true;
-            qtyToRemoveInput.disabled = true;
-            qtyToBillInput.value = item.QtyOnHand;
-            qtyToRemoveInput.value = '';
+            if (qtyToBillInput) {
+                qtyToBillInput.disabled = true;
+                qtyToBillInput.value = item.QtyOnHand;
+            }
+            if (qtyToRemoveInput) {
+                qtyToRemoveInput.disabled = true;
+                qtyToRemoveInput.value = '';
+            }
             item.QtyToBill = item.QtyOnHand;
             item.QtyToRemove = '';
     }
@@ -226,59 +504,42 @@ function handleDispositionChange(index, value) {
     updateSummary();
 }
 
-// Handle quantity input change
-function handleQtyChange(index, field, value) {
-    const item = deadstockItems[index];
-    const numValue = parseInt(value) || 0;
-    const input = document.querySelector(`input[data-index="${index}"][data-field="${field}"]`);
+// Handle quantity change
+function handleQtyChange(itemId, field, value) {
+    const item = deadstockItems.find(i => i.itemid === itemId);
+    if (!item) return;
 
-    // Validate quantity
-    if (numValue < 0 || numValue > item.QtyOnHand) {
-        input.classList.add('error');
+    const numValue = parseInt(value) || 0;
+    const input = document.querySelector(`input[data-itemid="${itemId}"][data-field="${field}"]`);
+
+    if (numValue < 0 || numValue > (item.QtyOnHand || 999)) {
+        if (input) input.classList.add('error');
         return;
     }
 
-    input.classList.remove('error');
+    if (input) input.classList.remove('error');
     item[field] = numValue || '';
-
     updateSummary();
 }
 
 // Update summary bar
 function updateSummary() {
-    const totalItems = deadstockItems.length;
-    const totalValue = deadstockItems.reduce((sum, item) => sum + (item.QtyOnHand * item.Price), 0);
+    const totalItems = filteredItems.length;
+    const totalValue = filteredItems.reduce((sum, item) => sum + ((item.QtyOnHand || 0) * (item.Price || 0)), 0);
     const pendingDecisions = deadstockItems.filter(item => !item.Disposition).length;
 
     totalItemsEl.textContent = totalItems;
     totalValueEl.textContent = formatCurrency(totalValue);
     pendingDecisionsEl.textContent = pendingDecisions;
 
-    // Disable save if there are pending decisions
     saveBtn.disabled = pendingDecisions > 0;
 }
 
-// Handle save button click
+// Handle save
 async function handleSave() {
-    // Validate all items have a disposition
     const pendingItems = deadstockItems.filter(item => !item.Disposition);
     if (pendingItems.length > 0) {
         showToast(`Please select a disposition for all items (${pendingItems.length} remaining)`, 'error');
-        return;
-    }
-
-    // Validate quantities
-    const invalidItems = deadstockItems.filter(item => {
-        if (item.Disposition === 'return') {
-            return !item.QtyToRemove || item.QtyToRemove <= 0;
-        } else if (item.Disposition === 'invoice' || item.Disposition === 'keep') {
-            return !item.QtyToBill || item.QtyToBill <= 0;
-        }
-        return false;
-    });
-
-    if (invalidItems.length > 0) {
-        showToast('Please enter valid quantities for all items', 'error');
         return;
     }
 
@@ -286,7 +547,6 @@ async function handleSave() {
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
 
-        // Prepare data for API
         const saveData = {
             customerId: currentCustomerId,
             items: deadstockItems.map(item => ({
@@ -298,17 +558,7 @@ async function handleSave() {
             timestamp: new Date().toISOString()
         };
 
-        // For demo purposes, log the data
-        // Replace with actual API call:
-        // const response = await fetch(API_CONFIG.saveEndpoint, {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(saveData)
-        // });
-
         console.log('Saving data:', saveData);
-
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         showToast('Selections saved successfully!', 'success');
@@ -323,11 +573,17 @@ async function handleSave() {
     }
 }
 
-// Handle reset button click
+// Handle reset
 function handleReset() {
     deadstockItems = JSON.parse(JSON.stringify(originalItems));
+    filteredItems = [...deadstockItems];
+    filters = {};
+    sortColumn = null;
+    document.querySelectorAll('.filter-input').forEach(input => input.value = '');
+    renderTableHeaders();
     renderTable();
     updateSummary();
+    updateFilterInfo();
     showToast('Selections reset to original values', 'info');
 }
 
@@ -352,21 +608,15 @@ function showNoData() {
 }
 
 function showToast(message, type = 'info') {
-    // Remove existing toast
     const existingToast = document.querySelector('.toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
+    if (existingToast) existingToast.remove();
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.textContent = message;
     document.body.appendChild(toast);
 
-    // Trigger animation
     setTimeout(() => toast.classList.add('show'), 10);
-
-    // Remove after delay
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
@@ -375,6 +625,7 @@ function showToast(message, type = 'info') {
 
 // Formatting utilities
 function formatCurrency(value) {
+    if (value == null || value === '') return '';
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD'
@@ -382,7 +633,7 @@ function formatCurrency(value) {
 }
 
 function formatDate(dateString) {
-    if (!dateString) return '-';
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
         year: 'numeric',
@@ -398,7 +649,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Mock data functions - Replace these with actual API calls
+// Mock data functions
 function getMockCustomers() {
     return [
         { id: '1', name: 'Acme Manufacturing' },
@@ -408,7 +659,6 @@ function getMockCustomers() {
 }
 
 function getMockDeadstockItems() {
-    // This returns the sample data you provided
     return [
         {
             "itemid": 2654,
