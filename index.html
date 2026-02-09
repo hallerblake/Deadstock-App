@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadstock Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Deadstock Management</h1>
+            <p class="subtitle">Review and manage consignment deadstock items</p>
+        </header>
+
+        <div class="customer-selector">
+            <label for="customer-dropdown">Select Customer:</label>
+            <select id="customer-dropdown">
+                <option value="">-- Select a Customer --</option>
+            </select>
+            <span id="loading-indicator" class="hidden">Loading...</span>
+        </div>
+
+        <div id="deadstock-content" class="hidden">
+            <div class="summary-bar">
+                <div class="summary-item">
+                    <span class="label">Total Items:</span>
+                    <span id="total-items" class="value">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Total Value:</span>
+                    <span id="total-value" class="value">$0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Pending Decisions:</span>
+                    <span id="pending-decisions" class="value">0</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="deadstock-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Description</th>
+                            <th>Supplier</th>
+                            <th>Last Issue</th>
+                            <th>Qty On Hand</th>
+                            <th>Unit Price</th>
+                            <th>Extended</th>
+                            <th>Restockable</th>
+                            <th>Disposition</th>
+                            <th>Qty to Bill</th>
+                            <th>Qty to Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deadstock-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="actions-bar">
+                <button id="save-btn" class="btn btn-primary">Save Selections</button>
+                <button id="reset-btn" class="btn btn-secondary">Reset</button>
+            </div>
+        </div>
+
+        <div id="no-data-message" class="hidden">
+            <p>No deadstock items found for this customer.</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
