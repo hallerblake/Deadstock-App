@@ -19,6 +19,10 @@
                 <option value="">-- Select a Customer --</option>
             </select>
             <span id="loading-indicator" class="hidden">Loading...</span>
+            <div class="mode-toggle">
+                <button id="mode-customer-btn" class="btn btn-mode" onclick="switchMode('customer')">Customer</button>
+                <button id="mode-pts-btn" class="btn btn-mode active" onclick="switchMode('pts')">PTS</button>
+            </div>
         </div>
 
         <div id="deadstock-content" class="hidden">

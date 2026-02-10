@@ -1,32 +1,31 @@
 // Deadstock Management Application
 
-// Configuration - Update these endpoints with your actual API URLs
+// Configuration
 const API_CONFIG = {
-    customersEndpoint: '/api/customers',
-    deadstockEndpoint: '/api/deadstock',
-    saveEndpoint: '/api/deadstock/save'
+    endpoint: 'http://localhost:3000/v1/procNV'
 };
 
-// Column definitions - ALL fields from JSON
+// Column definitions - visible fields from JSON
+// StockManagementId and ItemId are excluded from display but included in save data
 const COLUMNS = [
-    { key: 'itemid', label: 'Item ID', type: 'number', width: 80, visible: true, sortable: true },
-    { key: 'Item', label: 'Item', type: 'text', width: 120, visible: true, sortable: true },
-    { key: 'Description', label: 'Description', type: 'text', width: 180, visible: true, sortable: true },
-    { key: 'ExtendedDesc', label: 'Extended Desc', type: 'text', width: 180, visible: true, sortable: true },
-    { key: 'min', label: 'Min', type: 'number', width: 60, visible: true, sortable: true },
-    { key: 'max', label: 'Max', type: 'number', width: 60, visible: true, sortable: true },
-    { key: 'Restockable', label: 'Restockable', type: 'boolean', width: 100, visible: true, sortable: true },
-    { key: 'LastIssueDate', label: 'Last Issue Date', type: 'date', width: 120, visible: true, sortable: true },
-    { key: 'Price', label: 'Price', type: 'currency', width: 100, visible: true, sortable: true },
-    { key: 'SupplierName', label: 'Supplier', type: 'text', width: 150, visible: true, sortable: true },
-    { key: 'QtyOnHand', label: 'Qty On Hand', type: 'number', width: 100, visible: true, sortable: true },
-    { key: 'Disposition', label: 'Disposition', type: 'disposition', width: 180, visible: true, sortable: true },
-    { key: 'QtyToBill', label: 'Qty To Bill', type: 'input-number', width: 100, visible: true, sortable: true },
-    { key: 'QtyToRemove', label: 'Qty To Remove', type: 'input-number', width: 110, visible: true, sortable: true },
-    { key: 'QtyRemoved', label: 'Qty Removed', type: 'number', width: 100, visible: true, sortable: true },
-    { key: 'QtyUnreturnable', label: 'Qty Unreturnable', type: 'number', width: 120, visible: true, sortable: true },
-    { key: 'Status', label: 'Status', type: 'text', width: 100, visible: true, sortable: true },
-    { key: 'ReplenishmentModeId', label: 'Replenishment Mode', type: 'number', width: 140, visible: true, sortable: true }
+    { key: 'Item', label: 'Item', type: 'text', width: 100, visible: true, sortable: true },
+    { key: 'Description', label: 'Description', type: 'text', width: 140, visible: true, sortable: true },
+    { key: 'ExtendedDesc', label: 'Extended Desc', type: 'text', width: 140, visible: true, sortable: true },
+    { key: 'min', label: 'Min', type: 'input-number', width: 60, visible: true, sortable: true },
+    { key: 'max', label: 'Max', type: 'input-number', width: 60, visible: true, sortable: true },
+    { key: 'IsRestockable', label: 'Restock', type: 'toggle', width: 70, visible: true, sortable: true },
+    { key: 'LocationName', label: 'Location', type: 'text', width: 130, visible: true, sortable: true },
+    { key: 'LastIssueDate', label: 'Last Issue', type: 'date', width: 85, visible: true, sortable: true },
+    { key: 'Price', label: 'Price', type: 'currency', width: 80, visible: true, sortable: true },
+    { key: 'SupplierName', label: 'Supplier', type: 'text', width: 130, visible: true, sortable: true },
+    { key: 'QtyOnHand', label: 'Qty On Hand', type: 'number', width: 70, visible: true, sortable: true },
+    { key: 'Disposition', label: 'Disposition', type: 'disposition', width: 145, visible: true, sortable: true },
+    { key: 'QtyToBill', label: 'Qty To Bill', type: 'input-number', width: 75, visible: true, sortable: true },
+    { key: 'QtyToRemove', label: 'Qty To Remove', type: 'calculated', width: 80, visible: true, sortable: true },
+    { key: 'QtyRemoved', label: 'Qty Removed', type: 'input-number', width: 80, visible: true, sortable: true },
+    { key: 'QtyUnreturnable', label: 'Qty Unreturnable', type: 'calculated-unreturnable', width: 90, visible: true, sortable: true },
+    { key: 'Status', label: 'Status', type: 'text', width: 70, visible: true, sortable: true },
+    { key: 'ReplenishmentMode', label: 'Replen Mode', type: 'text', width: 80, visible: true, sortable: true }
 ];
 
 // Disposition options
@@ -36,6 +35,17 @@ const DISPOSITION_OPTIONS = [
     { value: 'return', label: 'Return All' },
     { value: 'keep', label: 'Keep (Bill & Convert)' }
 ];
+
+// View mode configuration
+let currentMode = 'pts'; // 'customer' or 'pts'
+
+const MODE_HIDDEN_COLUMNS = {
+    customer: ['QtyRemoved', 'QtyUnreturnable', 'Status', 'ReplenishmentMode', 'ExtendedDesc', 'LocationName', 'LastIssueDate', 'SupplierName', 'Price'],
+    pts: ['ExtendedDesc', 'min', 'max', 'IsRestockable', 'LocationName', 'LastIssueDate', 'Price', 'SupplierName', 'Status', 'ReplenishmentMode']
+};
+
+// Fields the customer cannot edit
+const CUSTOMER_READONLY_FIELDS = ['QtyRemoved'];
 
 // State management
 let currentCustomerId = null;
@@ -76,7 +86,7 @@ document.addEventListener('DOMContentLoaded', init);
 function init() {
     loadCustomers();
     setupEventListeners();
-    buildColumnMenu();
+    switchMode('pts'); // Default to PTS mode
 }
 
 function setupEventListeners() {
@@ -97,6 +107,27 @@ function setupEventListeners() {
     // Column resizing
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+}
+
+// Switch between Customer and PTS view modes
+function switchMode(mode) {
+    currentMode = mode;
+
+    // Update button styles
+    document.getElementById('mode-customer-btn').classList.toggle('active', mode === 'customer');
+    document.getElementById('mode-pts-btn').classList.toggle('active', mode === 'pts');
+
+    // Apply default column visibility for this mode
+    const hiddenKeys = MODE_HIDDEN_COLUMNS[mode];
+    columnConfig.forEach(col => {
+        col.visible = !hiddenKeys.includes(col.key);
+    });
+
+    buildColumnMenu();
+    if (deadstockItems.length > 0) {
+        renderTableHeaders();
+        renderTable();
+    }
 }
 
 // Build column visibility menu
@@ -135,18 +166,28 @@ function toggleColumnVisibility(key, visible) {
 // Load customers for dropdown
 async function loadCustomers() {
     try {
-        // Replace with actual API call
-        const customers = getMockCustomers();
-        customers.forEach(customer => {
-            const option = document.createElement('option');
-            option.value = customer.id;
-            option.textContent = customer.name;
-            customerDropdown.appendChild(option);
+        const response = await fetch(API_CONFIG.endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ proc: 'getCustomerList', params: {} })
         });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const customers = await response.json();
+        populateCustomerDropdown(customers);
     } catch (error) {
-        console.error('Error loading customers:', error);
-        showToast('Failed to load customers', 'error');
+        console.error('API unavailable, using dummy data:', error);
+        showToast('API unavailable - using dummy data', 'info');
+        populateCustomerDropdown(getDummyCustomers());
     }
+}
+
+function populateCustomerDropdown(customers) {
+    customers.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer.SiteId;
+        option.textContent = customer.CustomerName;
+        customerDropdown.appendChild(option);
+    });
 }
 
 // Handle customer selection change
@@ -166,8 +207,20 @@ async function loadDeadstockItems(customerId) {
     hideContent();
 
     try {
-        // Replace with actual API call
-        const data = getMockDeadstockItems();
+        let data;
+        try {
+            const response = await fetch(API_CONFIG.endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ proc: 'getDeadStockItems', params: { siteId: parseInt(customerId) } })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            data = await response.json();
+        } catch (apiError) {
+            console.error('API unavailable, using dummy data:', apiError);
+            showToast('API unavailable - using dummy data', 'info');
+            data = getDummyDeadstockItems();
+        }
 
         if (data && data.length > 0) {
             deadstockItems = data.map(item => ({ ...item }));
@@ -417,25 +470,42 @@ function renderCell(item, col, index) {
             `;
 
         case 'input-number':
-            const isQtyToBill = col.key === 'QtyToBill';
-            const isQtyToRemove = col.key === 'QtyToRemove';
-            let disabled = true;
             let displayValue = value ?? '';
-
-            if (item.Disposition === 'invoice' || item.Disposition === 'keep') {
-                if (isQtyToBill) disabled = false;
-            } else if (item.Disposition === 'return') {
-                if (isQtyToRemove) disabled = false;
-            }
+            const isReadonly = currentMode === 'customer' && CUSTOMER_READONLY_FIELDS.includes(col.key);
 
             return `
                 <input type="number" class="qty-input"
                        data-itemid="${item.itemid}"
                        data-field="${col.key}"
                        value="${displayValue}"
-                       min="0" max="${item.QtyOnHand || 999}"
-                       ${disabled ? 'disabled' : ''}
+                       min="0"
+                       ${isReadonly ? 'disabled' : ''}
                        onchange="handleQtyChange(${item.itemid}, '${col.key}', this.value)">
+            `;
+
+        case 'calculated':
+            // QtyToRemove = QtyOnHand - QtyToBill
+            const qtyOnHand = item.QtyOnHand || 0;
+            const qtyToBill = item.QtyToBill || 0;
+            const qtyToRemove = Math.max(0, qtyOnHand - qtyToBill);
+            return `<span class="number-cell" data-itemid="${item.itemid}" data-field="QtyToRemove">${qtyToRemove}</span>`;
+
+        case 'calculated-unreturnable':
+            // QtyUnreturnable = QtyOnHand - QtyRemoved
+            const oh = item.QtyOnHand || 0;
+            const removed = item.QtyRemoved || 0;
+            const unreturnable = Math.max(0, oh - removed);
+            return `<span class="number-cell" data-itemid="${item.itemid}" data-field="QtyUnreturnable">${unreturnable}</span>`;
+
+        case 'toggle':
+            const isYes = value === 1 || value === true;
+            return `
+                <button class="toggle-btn ${isYes ? 'toggle-yes' : 'toggle-no'}"
+                        data-itemid="${item.itemid}"
+                        data-field="${col.key}"
+                        onclick="handleToggle(${item.itemid}, '${col.key}')">
+                    ${isYes ? 'Yes' : 'No'}
+                </button>
             `;
 
         case 'text':
@@ -458,47 +528,25 @@ function handleDispositionChange(itemId, value) {
         if (value) select.classList.add(value);
     }
 
-    // Update quantity fields
-    const qtyToBillInput = document.querySelector(`input[data-itemid="${itemId}"][data-field="QtyToBill"]`);
-    const qtyToRemoveInput = document.querySelector(`input[data-itemid="${itemId}"][data-field="QtyToRemove"]`);
+    updateSummary();
+}
 
-    switch (value) {
-        case 'invoice':
-        case 'keep':
-            if (qtyToBillInput) {
-                qtyToBillInput.disabled = false;
-                qtyToBillInput.value = item.QtyOnHand;
-            }
-            if (qtyToRemoveInput) {
-                qtyToRemoveInput.disabled = true;
-                qtyToRemoveInput.value = '';
-            }
-            item.QtyToBill = item.QtyOnHand;
-            item.QtyToRemove = '';
-            break;
-        case 'return':
-            if (qtyToBillInput) {
-                qtyToBillInput.disabled = true;
-                qtyToBillInput.value = '';
-            }
-            if (qtyToRemoveInput) {
-                qtyToRemoveInput.disabled = false;
-                qtyToRemoveInput.value = item.QtyOnHand;
-            }
-            item.QtyToBill = '';
-            item.QtyToRemove = item.QtyOnHand;
-            break;
-        default:
-            if (qtyToBillInput) {
-                qtyToBillInput.disabled = true;
-                qtyToBillInput.value = item.QtyOnHand;
-            }
-            if (qtyToRemoveInput) {
-                qtyToRemoveInput.disabled = true;
-                qtyToRemoveInput.value = '';
-            }
-            item.QtyToBill = item.QtyOnHand;
-            item.QtyToRemove = '';
+// Handle toggle change
+function handleToggle(itemId, field) {
+    const item = deadstockItems.find(i => i.itemid === itemId);
+    if (!item) return;
+
+    // Toggle between true/false
+    const currentValue = item[field];
+    const isCurrentlyYes = currentValue === 1 || currentValue === true;
+    item[field] = !isCurrentlyYes;
+
+    // Update button display
+    const btn = document.querySelector(`button[data-itemid="${itemId}"][data-field="${field}"]`);
+    if (btn) {
+        const isNowYes = !isCurrentlyYes;
+        btn.className = `toggle-btn ${isNowYes ? 'toggle-yes' : 'toggle-no'}`;
+        btn.textContent = isNowYes ? 'Yes' : 'No';
     }
 
     updateSummary();
@@ -512,13 +560,38 @@ function handleQtyChange(itemId, field, value) {
     const numValue = parseInt(value) || 0;
     const input = document.querySelector(`input[data-itemid="${itemId}"][data-field="${field}"]`);
 
-    if (numValue < 0 || numValue > (item.QtyOnHand || 999)) {
+    if (numValue < 0) {
         if (input) input.classList.add('error');
         return;
     }
 
     if (input) input.classList.remove('error');
     item[field] = numValue || '';
+
+    // If QtyToBill changed, update QtyToRemove display
+    if (field === 'QtyToBill') {
+        const qtyOnHand = item.QtyOnHand || 0;
+        const qtyToRemove = Math.max(0, qtyOnHand - numValue);
+        item.QtyToRemove = qtyToRemove;
+
+        const qtyToRemoveEl = document.querySelector(`span[data-itemid="${itemId}"][data-field="QtyToRemove"]`);
+        if (qtyToRemoveEl) {
+            qtyToRemoveEl.textContent = qtyToRemove;
+        }
+    }
+
+    // If QtyRemoved changed, update QtyUnreturnable display
+    if (field === 'QtyRemoved') {
+        const qtyOnHand = item.QtyOnHand || 0;
+        const unreturnable = Math.max(0, qtyOnHand - numValue);
+        item.QtyUnreturnable = unreturnable;
+
+        const unreturnableEl = document.querySelector(`span[data-itemid="${itemId}"][data-field="QtyUnreturnable"]`);
+        if (unreturnableEl) {
+            unreturnableEl.textContent = unreturnable;
+        }
+    }
+
     updateSummary();
 }
 
@@ -550,15 +623,23 @@ async function handleSave() {
         const saveData = {
             customerId: currentCustomerId,
             items: deadstockItems.map(item => ({
+                StockManagementId: item.StockManagementId,
+                ItemId: item.ItemId,
                 itemid: item.itemid,
                 Disposition: item.Disposition,
                 QtyToBill: item.QtyToBill || 0,
-                QtyToRemove: item.QtyToRemove || 0
+                QtyToRemove: item.QtyToRemove || 0,
+                QtyRemoved: item.QtyRemoved || 0,
+                QtyUnreturnable: item.QtyUnreturnable || 0,
+                IsRestockable: item.IsRestockable,
+                min: item.min,
+                max: item.max
             })),
             timestamp: new Date().toISOString()
         };
 
         console.log('Saving data:', saveData);
+        // TODO: Replace with actual save API call
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         showToast('Selections saved successfully!', 'success');
@@ -649,96 +730,64 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Mock data functions
-function getMockCustomers() {
+// Dummy data - used when API is unavailable
+function getDummyCustomers() {
     return [
-        { id: '1', name: 'Acme Manufacturing' },
-        { id: '2', name: 'Precision Tools Inc.' },
-        { id: '3', name: 'Industrial Solutions LLC' }
+        { SiteId: 10, CustomerName: "[MTXC] WALLACE FORGE CO" },
+        { SiteId: 11, CustomerName: "[MTXC] CTE SOLUTIONS NORTH" },
+        { SiteId: 26, CustomerName: "[MTXC] RELIABLE TOOL" },
+        { SiteId: 27, CustomerName: "[MTXC] HENDRICKSON TRUCKING NAVARRE" },
+        { SiteId: 29, CustomerName: "[MTXC] Precise Metals - CONSIGNMENT" },
+        { SiteId: 33, CustomerName: "[MTXC] ELLIS MFG CONSIGNMENT" },
+        { SiteId: 36, CustomerName: "[MTXC] DYNAMIC N/C - CONSIGNMENT" },
+        { SiteId: 44, CustomerName: "[MTXC] COLDWATER MACHINE" }
     ];
 }
 
-function getMockDeadstockItems() {
+function getDummyDeadstockItems() {
     return [
         {
-            "itemid": 2654,
-            "Item": "CW8058613",
-            "Description": "3/4 Square, 2.25LOC",
-            "ExtendedDesc": "3/4X3/4X2 1/4X5 4FL RH CB",
-            "min": 1,
-            "max": 2,
-            "Restockable": 1,
-            "LastIssueDate": "2025-06-30",
-            "Price": 134.51,
-            "SupplierName": "PTSOLUTIONS [CON]",
-            "QtyOnHand": 10,
-            "Disposition": "",
-            "QtyToBill": 10,
-            "QtyToRemove": "",
-            "QtyRemoved": "",
-            "QtyUnreturnable": "",
-            "Status": "",
-            "ReplenishmentModeId": 2
+            itemid: 6420, Item: "SE2852350", Description: "INS LCMF160302-0300-MC CP600",
+            min: 2, max: 11, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
+            LastIssueDate: "2025-02-20", Price: 34.37, SupplierName: "PTSOLUTIONS [CON]",
+            QtyOnHand: 20, Disposition: "", QtyToBill: 20, QtyToRemove: 0, QtyRemoved: 0,
+            QtyUnreturnable: 0, Status: "", ReplenishmentMode: "Cabinet",
+            StockManagementId: 21646, ItemId: 6420
         },
         {
-            "itemid": 5820,
-            "Item": "DD1515474",
-            "Description": "Ball 3mm - 16 Reach",
-            "ExtendedDesc": "3.0MM 2F BN A/T CC EM 16A",
-            "min": 1,
-            "max": 2,
-            "Restockable": 1,
-            "LastIssueDate": "2025-11-01",
-            "Price": 28.31,
-            "SupplierName": "PTSOLUTIONS [CON]",
-            "QtyOnHand": 10,
-            "Disposition": "",
-            "QtyToBill": 10,
-            "QtyToRemove": "",
-            "QtyRemoved": "",
-            "QtyUnreturnable": "",
-            "Status": "",
-            "ReplenishmentModeId": 2
+            itemid: 19934, Item: "FT8592288", Description: "3200 B 6MMX12MX50MM",
+            ExtendedDesc: "3200 B 6MMX12MX50MM", min: 5, max: 7, IsRestockable: true,
+            LocationName: "CTE NORTH CONSIGN MAXI", LastIssueDate: "2025-02-07", Price: 22.34,
+            SupplierName: "PTSOLUTIONS [CON]", QtyOnHand: 9, Disposition: "", QtyToBill: 9,
+            QtyToRemove: 0, QtyRemoved: 0, QtyUnreturnable: 0, Status: "",
+            ReplenishmentMode: "Cabinet", StockManagementId: 371, ItemId: 19934
         },
         {
-            "itemid": 6798,
-            "Item": "EJ74ENMU100412Z",
-            "Description": "Dijet 1\" Hi-Feed Inserts",
-            "ExtendedDesc": "ENMU100412ZER-PH JC8118",
-            "min": 1,
-            "max": 2,
-            "Restockable": 1,
-            "LastIssueDate": "2026-02-05",
-            "Price": 11.53,
-            "SupplierName": "PTSOLUTIONS [CON]",
-            "QtyOnHand": 10,
-            "Disposition": "",
-            "QtyToBill": 10,
-            "QtyToRemove": "",
-            "QtyRemoved": "",
-            "QtyUnreturnable": "",
-            "Status": "",
-            "ReplenishmentModeId": 2
+            itemid: 5178, Item: "GA2020261", Description: "EM 1/16 X 1/4 X 1-1/2 CRBD 4FL SQ",
+            min: 8, max: 18, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
+            LastIssueDate: "2025-06-04", Price: 14.81, SupplierName: "PTSOLUTIONS [CON]",
+            QtyOnHand: 8, Disposition: "", QtyToBill: 8, QtyToRemove: 0, QtyRemoved: 0,
+            QtyUnreturnable: 0, Status: "", ReplenishmentMode: "Cabinet",
+            StockManagementId: 39149, ItemId: 5178
         },
         {
-            "itemid": 12101,
-            "Item": "DD1515472",
-            "Description": "Ball 3mm - 10 Reach",
-            "ExtendedDesc": "3.0MM 2F BN A/T CC EM 10A",
-            "min": 1,
-            "max": 2,
-            "Restockable": 1,
-            "LastIssueDate": "2026-02-08",
-            "Price": 26.68,
-            "SupplierName": "PTSOLUTIONS [CON]",
-            "QtyOnHand": 10,
-            "Disposition": "",
-            "QtyToBill": 10,
-            "QtyToRemove": "",
-            "QtyRemoved": "",
-            "QtyUnreturnable": "",
-            "Status": "",
-            "ReplenishmentModeId": 2
+            itemid: 7061, Item: "GE98102813ALTIN",
+            Description: "FT .250\" X 90\u00b0 X .1/2\" LOC X CR.005",
+            min: 1, max: 2, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
+            LastIssueDate: "2025-07-31", Price: 132.77, SupplierName: "PTSOLUTIONS [CON]",
+            QtyOnHand: 5, Disposition: "", QtyToBill: 5, QtyToRemove: 0, QtyRemoved: 0,
+            QtyUnreturnable: 0, Status: "", ReplenishmentMode: "Cabinet",
+            StockManagementId: 39171, ItemId: 7061
+        },
+        {
+            itemid: 18207, Item: "GE9026320C3", Description: ".020D X .005R CRAD AlTiN",
+            ExtendedDesc: ".02x.06LOC w/.005CR EM 4FLT   Harvey #26320-C3",
+            min: 12, max: 25, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
+            LastIssueDate: "2025-01-23", Price: 58.01, SupplierName: "PTSOLUTIONS [CON]",
+            QtyOnHand: 24, Disposition: "", QtyToBill: 24, QtyToRemove: 0, QtyRemoved: 0,
+            QtyUnreturnable: 0, Status: "", ReplenishmentMode: "Cabinet",
+            StockManagementId: 976, ItemId: 18207
         }
     ];
 }
+
