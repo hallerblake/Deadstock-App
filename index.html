@@ -20,8 +20,8 @@
             </select>
             <span id="loading-indicator" class="hidden">Loading...</span>
             <div class="mode-toggle">
-                <button id="mode-customer-btn" class="btn btn-mode" onclick="switchMode('customer')">Customer</button>
-                <button id="mode-pts-btn" class="btn btn-mode active" onclick="switchMode('pts')">PTS</button>
+                <button id="mode-customer-btn" class="btn btn-mode active" onclick="switchMode('customer')">Customer</button>
+                <button id="mode-pts-btn" class="btn btn-mode" onclick="switchMode('pts')">PTS</button>
             </div>
         </div>
 
@@ -31,9 +31,21 @@
                     <span class="label">Total Items:</span>
                     <span id="total-items" class="value">0</span>
                 </div>
-                <div class="summary-item">
-                    <span class="label">Total Value:</span>
+                <div class="summary-item" id="invoice-summary">
+                    <span class="label">Total Value to be Invoiced:</span>
                     <span id="total-value" class="value">$0.00</span>
+                    <span id="invoice-fineprint" class="fineprint">* Subject to change pending inventory verification</span>
+                    <div id="final-approval-section" class="final-approval hidden">
+                        <div class="final-approval-banner">Action Required: Customer Final Approval</div>
+                        <p class="final-approval-desc">All items have been verified. Please review the final invoice total, enter a PO number if applicable, and approve.</p>
+                        <div class="final-approval-fields">
+                            <div class="po-field">
+                                <label for="po-number">PO Number <span class="optional-tag">(Optional)</span></label>
+                                <input type="text" id="po-number" placeholder="Enter PO #" />
+                            </div>
+                            <button id="final-approve-btn" class="btn btn-approve" onclick="handleFinalApproval()">Approve and Submit</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="summary-item">
                     <span class="label">Pending Decisions:</span>
@@ -76,7 +88,8 @@
             </div>
 
             <div class="actions-bar">
-                <button id="save-btn" class="btn btn-primary">Save Selections</button>
+                <button id="save-btn" class="btn btn-primary">Save Progress</button>
+                <button id="finalize-btn" class="btn btn-finalize">Save and Finalize</button>
                 <button id="reset-btn" class="btn btn-secondary">Reset</button>
             </div>
         </div>
