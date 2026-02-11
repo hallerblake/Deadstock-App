@@ -11,8 +11,8 @@ const COLUMNS = [
     { key: 'Item', label: 'Item', type: 'text', width: 100, visible: true, sortable: true },
     { key: 'Description', label: 'Description', type: 'text', width: 140, visible: true, sortable: true },
     { key: 'ExtendedDesc', label: 'Extended Desc', type: 'text', width: 140, visible: true, sortable: true },
-    { key: 'min', label: 'Min', type: 'input-number', width: 60, visible: true, sortable: true },
-    { key: 'max', label: 'Max', type: 'input-number', width: 60, visible: true, sortable: true },
+    { key: 'Min', label: 'Min', type: 'input-number', width: 60, visible: true, sortable: true },
+    { key: 'Max', label: 'Max', type: 'input-number', width: 60, visible: true, sortable: true },
     { key: 'IsRestockable', label: 'Restock', type: 'toggle', width: 70, visible: true, sortable: true },
     { key: 'LocationName', label: 'Location', type: 'text', width: 130, visible: true, sortable: true },
     { key: 'LastIssueDate', label: 'Last Issue', type: 'date', width: 85, visible: true, sortable: true },
@@ -52,7 +52,7 @@ let currentMode = 'customer'; // 'customer' or 'pts'
 
 const MODE_HIDDEN_COLUMNS = {
     customer: ['QtyRemoved', 'QtyUnreturnable', 'UnreturnableReason', 'ReplenishmentMode', 'ExtendedDesc', 'LocationName', 'LastIssueDate', 'SupplierName', 'Price'],
-    pts: ['ExtendedDesc', 'min', 'max', 'IsRestockable', 'LocationName', 'LastIssueDate', 'Price', 'SupplierName', 'ReplenishmentMode']
+    pts: ['ExtendedDesc', 'Min', 'Max', 'IsRestockable', 'LocationName', 'LastIssueDate', 'Price', 'SupplierName', 'ReplenishmentMode']
 };
 
 // Fields the customer cannot edit
@@ -63,8 +63,8 @@ const COLUMN_TOOLTIPS = {
     'Item': '<strong>Item Number</strong><br>The unique manufacturer or catalog part number used to identify this item in the system.',
     'Description': '<strong>Description</strong><br>A brief description of the item including key specifications such as size, type, and material.',
     'ExtendedDesc': '<strong>Extended Description</strong><br>Additional specification details beyond the short description. May include full manufacturer part info, coatings, or alternate identifiers.',
-    'min': '<strong>Minimum Stock Level</strong><br>The minimum quantity that should be kept on hand in the vending machine. When stock falls to this level, a replenishment order is triggered.<br><br><em>Nonconsignment note:</em> If the customer elects to keep items (Invoice and Convert), these items become nonconsignment inventory. The Min value will carry forward as the reorder point for the now customer-owned stock. If Restockable is set to No, Min is cleared and not applicable.',
-    'max': '<strong>Maximum Stock Level</strong><br>The maximum quantity allowed in the vending machine at this location. Replenishment orders will bring stock up to this level.<br><br><em>Nonconsignment note:</em> If the customer elects to keep items (Invoice and Convert), these items become nonconsignment inventory. The Max value will carry forward as the restock-up-to quantity for the now customer-owned stock. If Restockable is set to No, Max is cleared and not applicable.',
+    'Min': '<strong>Minimum Stock Level</strong><br>The minimum quantity that should be kept on hand in the vending machine. When stock falls to this level, a replenishment order is triggered.<br><br><em>Nonconsignment note:</em> If the customer elects to keep items (Invoice and Convert), these items become nonconsignment inventory. The Min value will carry forward as the reorder point for the now customer-owned stock. If Restockable is set to No, Min is cleared and not applicable.',
+    'Max': '<strong>Maximum Stock Level</strong><br>The maximum quantity allowed in the vending machine at this location. Replenishment orders will bring stock up to this level.<br><br><em>Nonconsignment note:</em> If the customer elects to keep items (Invoice and Convert), these items become nonconsignment inventory. The Max value will carry forward as the restock-up-to quantity for the now customer-owned stock. If Restockable is set to No, Max is cleared and not applicable.',
     'IsRestockable': '<strong>Restockable</strong><br>Indicates whether this item should be automatically restocked in the vending machine after it is consumed.<br><br><em>Yes</em> = Item will be replenished as nonconsignment (customer-owned) inventory using the Min and Max levels<br><em>No</em> = Item will not be reordered, and Min/Max values are cleared<br><br><em>Nonconsignment note:</em> Since the customer is converting these items from consignment to nonconsignment, this setting determines whether the customer wants to continue stocking the item going forward as their own inventory. Toggling to No clears the Min and Max fields.',
     'LocationName': '<strong>Storage Location</strong><br>The physical location where this item is stored, such as a specific vending machine, cabinet, crib, or consignment area at the customer site.',
     'LastIssueDate': '<strong>Last Issue Date</strong><br>The most recent date this item was dispensed from the vending machine. Items with older dates may indicate slow-moving or deadstock items that are no longer being consumed.',
@@ -634,7 +634,7 @@ function renderCell(item, col, index) {
             const lockedByApproval = isProjectLocked();
             // Lock min/max when Restockable is No
             const isRestockable = item.IsRestockable === true || item.IsRestockable === 1;
-            const lockedByRestock = (col.key === 'min' || col.key === 'max') && !isRestockable;
+            const lockedByRestock = (col.key === 'Min' || col.key === 'Max') && !isRestockable;
             if (lockedByRestock) displayValue = '';
             const isDisabled = isReadonly || disabledByDisposition || lockedByCustomer || lockedByApproval || lockedByRestock;
 
@@ -758,13 +758,13 @@ function handleToggle(itemId, field) {
     const isCurrentlyYes = currentValue === 1 || currentValue === true;
     item[field] = !isCurrentlyYes;
 
-    // If Restockable toggled to No, clear min and max
+    // If Restockable toggled to No, clear Min and Max
     if (field === 'IsRestockable' && isCurrentlyYes) {
-        item.min = '';
-        item.max = '';
+        item.Min = '';
+        item.Max = '';
     }
 
-    // Re-render to update min/max editability
+    // Re-render to update Min/Max editability
     renderTable();
     updateSummary();
 }
@@ -956,8 +956,8 @@ function buildSaveData() {
             QtyUnreturnable: item.QtyUnreturnable || 0,
             UnreturnableReason: item.UnreturnableReason || '',
             IsRestockable: item.IsRestockable,
-            min: item.min,
-            max: item.max
+            Min: item.Min,
+            Max: item.Max
         })),
         timestamp: new Date().toISOString()
     };
@@ -1324,8 +1324,8 @@ function bulkSetRestockable(val) {
         if (currentMode === 'pts' && item.Status !== STATUS_AWAITING) return;
         item.IsRestockable = val;
         if (!val) {
-            item.min = '';
-            item.max = '';
+            item.Min = '';
+            item.Max = '';
         }
         count++;
     });
@@ -1507,7 +1507,7 @@ function getDummyDeadstockItems() {
     return [
         {
             Item: "SE2852350", Description: "INS LCMF160302-0300-MC CP600",
-            min: 2, max: 11, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
+            Min: 2, Max: 11, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
             LastIssueDate: "2025-02-20", Price: 34.37, SupplierName: "PTSOLUTIONS [CON]",
             QtyOnHand: 20, PackageSize: 5, Disposition: "", QtyToBill: 20, QtyToRemove: 0, QtyRemoved: '',
             QtyUnreturnable: 0, Status: "", ReplenishmentMode: "Cabinet",
@@ -1515,7 +1515,7 @@ function getDummyDeadstockItems() {
         },
         {
             Item: "FT8592288", Description: "3200 B 6MMX12MX50MM",
-            ExtendedDesc: "3200 B 6MMX12MX50MM", min: 5, max: 7, IsRestockable: true,
+            ExtendedDesc: "3200 B 6MMX12MX50MM", Min: 5, Max: 7, IsRestockable: true,
             LocationName: "CTE NORTH CONSIGN MAXI", LastIssueDate: "2025-02-07", Price: 22.34,
             SupplierName: "PTSOLUTIONS [CON]", QtyOnHand: 9, PackageSize: 3, Disposition: "", QtyToBill: 9,
             QtyToRemove: 0, QtyRemoved: '', QtyUnreturnable: 0, Status: "",
@@ -1523,7 +1523,7 @@ function getDummyDeadstockItems() {
         },
         {
             Item: "GA2020261", Description: "EM 1/16 X 1/4 X 1-1/2 CRBD 4FL SQ",
-            min: 8, max: 18, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
+            Min: 8, Max: 18, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
             LastIssueDate: "2025-06-04", Price: 14.81, SupplierName: "PTSOLUTIONS [CON]",
             QtyOnHand: 8, PackageSize: 1, Disposition: "", QtyToBill: 8, QtyToRemove: 0, QtyRemoved: '',
             QtyUnreturnable: 0, Status: "", ReplenishmentMode: "Cabinet",
@@ -1532,7 +1532,7 @@ function getDummyDeadstockItems() {
         {
             Item: "GE98102813ALTIN",
             Description: "FT .250\" X 90\u00b0 X .1/2\" LOC X CR.005",
-            min: 1, max: 2, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
+            Min: 1, Max: 2, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
             LastIssueDate: "2025-07-31", Price: 132.77, SupplierName: "PTSOLUTIONS [CON]",
             QtyOnHand: 5, PackageSize: 2, Disposition: "", QtyToBill: 5, QtyToRemove: 0, QtyRemoved: '',
             QtyUnreturnable: 0, Status: "", ReplenishmentMode: "Cabinet",
@@ -1541,7 +1541,7 @@ function getDummyDeadstockItems() {
         {
             Item: "GE9026320C3", Description: ".020D X .005R CRAD AlTiN",
             ExtendedDesc: ".02x.06LOC w/.005CR EM 4FLT   Harvey #26320-C3",
-            min: 12, max: 25, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
+            Min: 12, Max: 25, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
             LastIssueDate: "2025-01-23", Price: 58.01, SupplierName: "PTSOLUTIONS [CON]",
             QtyOnHand: 24, PackageSize: 10, Disposition: "", QtyToBill: 24, QtyToRemove: 0, QtyRemoved: '',
             QtyUnreturnable: 0, Status: "", ReplenishmentMode: "Cabinet",
