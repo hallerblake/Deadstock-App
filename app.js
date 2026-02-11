@@ -553,7 +553,7 @@ function renderTable() {
 
     filteredItems.forEach((item, index) => {
         const row = document.createElement('tr');
-        row.dataset.itemid = item.itemid;
+        row.dataset.itemid = item.ItemId;
 
         visibleColumns.forEach(col => {
             const td = document.createElement('td');
@@ -569,7 +569,7 @@ function renderTable() {
 // Render individual cell
 function renderCell(item, col, index) {
     const value = item[col.key];
-    const itemIndex = deadstockItems.findIndex(i => i.itemid === item.itemid);
+    const itemIndex = deadstockItems.findIndex(i => i.ItemId === item.ItemId);
 
     switch (col.type) {
         case 'currency':
@@ -590,8 +590,8 @@ function renderCell(item, col, index) {
             const customerFinalized = currentMode === 'pts' && item.Status !== STATUS_AWAITING;
             const selectClass = item.Disposition ? `disposition-select ${item.Disposition}` : 'disposition-select';
             return `
-                <select class="${selectClass}" data-itemid="${item.itemid}" ${locked || customerFinalized ? 'disabled' : ''}
-                        onchange="handleDispositionChange(${item.itemid}, this.value)">
+                <select class="${selectClass}" data-itemid="${item.ItemId}" ${locked || customerFinalized ? 'disabled' : ''}
+                        onchange="handleDispositionChange(${item.ItemId}, this.value)">
                     ${DISPOSITION_OPTIONS.map(opt => `
                         <option value="${opt.value}" ${item.Disposition === opt.value ? 'selected' : ''}>
                             ${opt.label}
@@ -640,12 +640,12 @@ function renderCell(item, col, index) {
 
             return `
                 <input type="number" class="qty-input"
-                       data-itemid="${item.itemid}"
+                       data-itemid="${item.ItemId}"
                        data-field="${col.key}"
                        value="${displayValue}"
                        min="${fieldMin}" ${maxAttr} ${stepAttr}
                        ${isDisabled ? 'disabled' : ''}
-                       onchange="handleQtyChange(${item.itemid}, '${col.key}', this.value)">
+                       onchange="handleQtyChange(${item.ItemId}, '${col.key}', this.value)">
             `;
 
         case 'calculated':
@@ -653,7 +653,7 @@ function renderCell(item, col, index) {
             const qtyOnHand = item.QtyOnHand || 0;
             const qtyToBill = item.QtyToBill || 0;
             const qtyToRemove = Math.max(0, qtyOnHand - qtyToBill);
-            return `<span class="number-cell" data-itemid="${item.itemid}" data-field="QtyToRemove">${qtyToRemove}</span>`;
+            return `<span class="number-cell" data-itemid="${item.ItemId}" data-field="QtyToRemove">${qtyToRemove}</span>`;
 
         case 'calculated-unreturnable':
             // QtyUnreturnable = QtyOnHand - QtyToBill - QtyRemoved
@@ -661,7 +661,7 @@ function renderCell(item, col, index) {
             const bill = item.QtyToBill || 0;
             const removed = item.QtyRemoved || 0;
             const unreturnable = Math.max(0, oh - bill - removed);
-            return `<span class="number-cell" data-itemid="${item.itemid}" data-field="QtyUnreturnable">${unreturnable}</span>`;
+            return `<span class="number-cell" data-itemid="${item.ItemId}" data-field="QtyUnreturnable">${unreturnable}</span>`;
 
         case 'unreturnable-reason':
             const calcQtyToRemove = Math.max(0, (item.QtyOnHand || 0) - (item.QtyToBill || 0));
@@ -674,8 +674,8 @@ function renderCell(item, col, index) {
             const reasonLocked = isProjectLocked();
             const reasonClass = item.UnreturnableReason ? `reason-select has-value` : 'reason-select';
             return `
-                <select class="${reasonClass}" data-itemid="${item.itemid}" ${reasonLocked ? 'disabled' : ''}
-                        onchange="handleReasonChange(${item.itemid}, this.value)">
+                <select class="${reasonClass}" data-itemid="${item.ItemId}" ${reasonLocked ? 'disabled' : ''}
+                        onchange="handleReasonChange(${item.ItemId}, this.value)">
                     ${UNRETURNABLE_REASON_OPTIONS.map(opt => `
                         <option value="${opt.value}" ${item.UnreturnableReason === opt.value ? 'selected' : ''}>
                             ${opt.label}
@@ -689,10 +689,10 @@ function renderCell(item, col, index) {
             const toggleLocked = isProjectLocked();
             return `
                 <button class="toggle-btn ${isYes ? 'toggle-yes' : 'toggle-no'}"
-                        data-itemid="${item.itemid}"
+                        data-itemid="${item.ItemId}"
                         data-field="${col.key}"
                         ${toggleLocked ? 'disabled' : ''}
-                        onclick="handleToggle(${item.itemid}, '${col.key}')">
+                        onclick="handleToggle(${item.ItemId}, '${col.key}')">
                     ${isYes ? 'Yes' : 'No'}
                 </button>
             `;
@@ -716,7 +716,7 @@ function renderCell(item, col, index) {
 
 // Handle disposition change
 function handleDispositionChange(itemId, value) {
-    const item = deadstockItems.find(i => i.itemid === itemId);
+    const item = deadstockItems.find(i => i.ItemId === itemId);
     if (!item) return;
 
     item.Disposition = value;
@@ -742,7 +742,7 @@ function handleDispositionChange(itemId, value) {
 
 // Handle unreturnable reason change
 function handleReasonChange(itemId, value) {
-    const item = deadstockItems.find(i => i.itemid === itemId);
+    const item = deadstockItems.find(i => i.ItemId === itemId);
     if (!item) return;
     item.UnreturnableReason = value;
     updateSummary();
@@ -750,7 +750,7 @@ function handleReasonChange(itemId, value) {
 
 // Handle toggle change
 function handleToggle(itemId, field) {
-    const item = deadstockItems.find(i => i.itemid === itemId);
+    const item = deadstockItems.find(i => i.ItemId === itemId);
     if (!item) return;
 
     // Toggle between true/false
@@ -771,7 +771,7 @@ function handleToggle(itemId, field) {
 
 // Handle quantity change
 function handleQtyChange(itemId, field, value) {
-    const item = deadstockItems.find(i => i.itemid === itemId);
+    const item = deadstockItems.find(i => i.ItemId === itemId);
     if (!item) return;
 
     const numValue = parseInt(value) || 0;
@@ -949,7 +949,6 @@ function buildSaveData() {
         items: deadstockItems.map(item => ({
             StockManagementId: item.StockManagementId,
             ItemId: item.ItemId,
-            itemid: item.itemid,
             Disposition: item.Disposition,
             QtyToBill: item.QtyToBill || 0,
             QtyToRemove: item.QtyToRemove || 0,
@@ -967,22 +966,37 @@ function buildSaveData() {
 // Update statuses based on current item state
 function updateItemStatuses() {
     deadstockItems.forEach(item => {
-        if (item.Status === STATUS_AWAITING && item.Disposition) {
-            if (item.Disposition === 'invoice-all') {
-                // Invoice all skips PTS verification — nothing to remove
-                item.Status = STATUS_PENDING_FINAL;
-            } else {
-                // Other dispositions require PTS verification
-                item.Status = STATUS_PENDING_VERIFY;
+        // Don't touch approved (locked) items
+        if (item.Status === STATUS_APPROVED) return;
+
+        // If disposition was cleared, revert to awaiting
+        if (!item.Disposition) {
+            if (item.Status !== STATUS_AWAITING) {
+                item.Status = STATUS_AWAITING;
             }
-        } else if (item.Status === STATUS_PENDING_VERIFY) {
+            return;
+        }
+
+        // Invoice all skips PTS verification — nothing to remove
+        if (item.Disposition === 'invoice-all') {
+            if (item.Status === STATUS_AWAITING || item.Status === STATUS_PENDING_VERIFY) {
+                item.Status = STATUS_PENDING_FINAL;
+            }
+            return;
+        }
+
+        // Return and partial require PTS verification
+        if (item.Status === STATUS_AWAITING) {
+            item.Status = STATUS_PENDING_VERIFY;
+        }
+
+        // Check if PTS verification is complete
+        if (item.Status === STATUS_PENDING_VERIFY) {
             const qtyToRemove = Math.max(0, (item.QtyOnHand || 0) - (item.QtyToBill || 0));
             const filled = item.QtyRemoved !== '' && item.QtyRemoved != null;
             if (filled && item.QtyRemoved === qtyToRemove) {
-                // PTS removed the expected amount
                 item.Status = STATUS_PENDING_FINAL;
             } else if (filled && item.QtyRemoved !== qtyToRemove && item.UnreturnableReason) {
-                // PTS removed a different amount but provided a reason
                 item.Status = STATUS_PENDING_FINAL;
             }
         }
@@ -1492,7 +1506,7 @@ function getDummyCustomers() {
 function getDummyDeadstockItems() {
     return [
         {
-            itemid: 6420, Item: "SE2852350", Description: "INS LCMF160302-0300-MC CP600",
+            Item: "SE2852350", Description: "INS LCMF160302-0300-MC CP600",
             min: 2, max: 11, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
             LastIssueDate: "2025-02-20", Price: 34.37, SupplierName: "PTSOLUTIONS [CON]",
             QtyOnHand: 20, PackageSize: 5, Disposition: "", QtyToBill: 20, QtyToRemove: 0, QtyRemoved: '',
@@ -1500,7 +1514,7 @@ function getDummyDeadstockItems() {
             StockManagementId: 21646, ItemId: 6420
         },
         {
-            itemid: 19934, Item: "FT8592288", Description: "3200 B 6MMX12MX50MM",
+            Item: "FT8592288", Description: "3200 B 6MMX12MX50MM",
             ExtendedDesc: "3200 B 6MMX12MX50MM", min: 5, max: 7, IsRestockable: true,
             LocationName: "CTE NORTH CONSIGN MAXI", LastIssueDate: "2025-02-07", Price: 22.34,
             SupplierName: "PTSOLUTIONS [CON]", QtyOnHand: 9, PackageSize: 3, Disposition: "", QtyToBill: 9,
@@ -1508,7 +1522,7 @@ function getDummyDeadstockItems() {
             ReplenishmentMode: "Cabinet", StockManagementId: 371, ItemId: 19934
         },
         {
-            itemid: 5178, Item: "GA2020261", Description: "EM 1/16 X 1/4 X 1-1/2 CRBD 4FL SQ",
+            Item: "GA2020261", Description: "EM 1/16 X 1/4 X 1-1/2 CRBD 4FL SQ",
             min: 8, max: 18, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
             LastIssueDate: "2025-06-04", Price: 14.81, SupplierName: "PTSOLUTIONS [CON]",
             QtyOnHand: 8, PackageSize: 1, Disposition: "", QtyToBill: 8, QtyToRemove: 0, QtyRemoved: '',
@@ -1516,7 +1530,7 @@ function getDummyDeadstockItems() {
             StockManagementId: 39149, ItemId: 5178
         },
         {
-            itemid: 7061, Item: "GE98102813ALTIN",
+            Item: "GE98102813ALTIN",
             Description: "FT .250\" X 90\u00b0 X .1/2\" LOC X CR.005",
             min: 1, max: 2, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
             LastIssueDate: "2025-07-31", Price: 132.77, SupplierName: "PTSOLUTIONS [CON]",
@@ -1525,7 +1539,7 @@ function getDummyDeadstockItems() {
             StockManagementId: 39171, ItemId: 7061
         },
         {
-            itemid: 18207, Item: "GE9026320C3", Description: ".020D X .005R CRAD AlTiN",
+            Item: "GE9026320C3", Description: ".020D X .005R CRAD AlTiN",
             ExtendedDesc: ".02x.06LOC w/.005CR EM 4FLT   Harvey #26320-C3",
             min: 12, max: 25, IsRestockable: true, LocationName: "CTE NORTH CONSIGN MAXI",
             LastIssueDate: "2025-01-23", Price: 58.01, SupplierName: "PTSOLUTIONS [CON]",

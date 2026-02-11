@@ -6,7 +6,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    background-color: #f5f7fa;
+    background-color: #f0f2f5;
     color: #333;
     line-height: 1.6;
 }
@@ -20,8 +20,8 @@ body {
 header {
     text-align: center;
     margin-bottom: 10px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    padding: 12px 20px;
+    background: #075fa4;
     color: white;
     border-radius: 6px;
 }
@@ -40,7 +40,7 @@ header .subtitle {
     background: white;
     padding: 10px 15px;
     border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     margin-bottom: 10px;
     display: flex;
     align-items: center;
@@ -49,7 +49,7 @@ header .subtitle {
 
 .customer-selector label {
     font-weight: 600;
-    color: #1e3a5f;
+    color: #075fa4;
 }
 
 .customer-selector select {
@@ -64,7 +64,7 @@ header .subtitle {
 
 .customer-selector select:focus {
     outline: none;
-    border-color: #2d5a87;
+    border-color: #075fa4;
 }
 
 #loading-indicator {
@@ -76,29 +76,29 @@ header .subtitle {
     display: flex;
     gap: 0;
     margin-left: auto;
-    border-radius: 6px;
+    border-radius: 25px;
     overflow: hidden;
-    border: 2px solid #1e3a5f;
+    border: 2px solid #075fa4;
 }
 
 .btn-mode {
-    padding: 8px 20px;
+    padding: 8px 22px;
     font-size: 0.9rem;
     font-weight: 600;
     border: none;
     border-radius: 0;
     cursor: pointer;
     background: white;
-    color: #1e3a5f;
+    color: #075fa4;
     transition: all 0.2s;
 }
 
 .btn-mode:hover {
-    background: #e8ecf0;
+    background: #e8f0f8;
 }
 
 .btn-mode.active {
-    background: #1e3a5f;
+    background: #075fa4;
     color: white;
 }
 
@@ -116,7 +116,7 @@ header .subtitle {
     background: white;
     padding: 8px 15px;
     border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     flex: 1;
     text-align: center;
 }
@@ -132,13 +132,13 @@ header .subtitle {
     display: block;
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1e3a5f;
+    color: #075fa4;
 }
 
 .fineprint {
     display: block;
     font-size: 0.65rem;
-    color: #c0392b;
+    color: #ec0100;
     font-style: italic;
     margin-top: 2px;
 }
@@ -146,9 +146,9 @@ header .subtitle {
 /* Final Approval Section */
 .summary-item.approval-active {
     flex: 2;
-    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
-    border: 2px solid #f0ad4e;
-    box-shadow: 0 4px 12px rgba(240, 173, 78, 0.3);
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 2px solid #ec0100;
+    box-shadow: 0 4px 12px rgba(236, 1, 0, 0.15);
     padding: 15px 20px;
 }
 
@@ -158,20 +158,20 @@ header .subtitle {
 }
 
 .final-approval-banner {
-    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    background: #ec0100;
     color: white;
     font-weight: 700;
     font-size: 0.9rem;
     padding: 8px 14px;
-    border-radius: 5px;
+    border-radius: 25px;
     text-align: center;
     letter-spacing: 0.3px;
     animation: pulse-glow 2s ease-in-out infinite;
 }
 
 @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 5px rgba(230, 126, 34, 0.3); }
-    50% { box-shadow: 0 0 15px rgba(230, 126, 34, 0.6); }
+    0%, 100% { box-shadow: 0 0 5px rgba(236, 1, 0, 0.2); }
+    50% { box-shadow: 0 0 15px rgba(236, 1, 0, 0.4); }
 }
 
 .final-approval-desc {
@@ -198,7 +198,7 @@ header .subtitle {
 .po-field label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #1e3a5f;
+    color: #075fa4;
 }
 
 .optional-tag {
@@ -218,26 +218,26 @@ header .subtitle {
 
 .po-field input:focus {
     outline: none;
-    border-color: #e67e22;
+    border-color: #075fa4;
 }
 
 .btn-approve {
-    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    background: #ec0100;
     color: white;
     padding: 10px 24px;
     font-size: 0.9rem;
     font-weight: 700;
     border: none;
-    border-radius: 6px;
+    border-radius: 25px;
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
 }
 
 .btn-approve:hover {
-    background: linear-gradient(135deg, #d35400 0%, #c0392b 100%);
+    background: #c50100;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(211, 84, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(236, 1, 0, 0.3);
 }
 
 .btn-approve:disabled {
@@ -250,19 +250,19 @@ header .subtitle {
 /* Locked project state */
 .summary-item.approval-locked {
     flex: 2;
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-    border: 2px solid #28a745;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.25);
+    background: linear-gradient(135deg, #e8f4fd 0%, #d0e8f7 100%);
+    border: 2px solid #075fa4;
+    box-shadow: 0 4px 12px rgba(7, 95, 164, 0.15);
     padding: 15px 20px;
 }
 
 .locked-banner {
-    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    background: #075fa4;
     color: white;
     font-weight: 700;
     font-size: 0.9rem;
     padding: 8px 14px;
-    border-radius: 5px;
+    border-radius: 25px;
     text-align: center;
     letter-spacing: 0.3px;
     margin-top: 10px;
@@ -270,7 +270,7 @@ header .subtitle {
 
 .locked-details {
     font-size: 0.78rem;
-    color: #155724;
+    color: #075fa4;
     margin-top: 6px;
     text-align: center;
     line-height: 1.4;
@@ -305,7 +305,7 @@ header .subtitle {
 .status-badge {
     display: inline-block;
     padding: 3px 8px;
-    border-radius: 4px;
+    border-radius: 12px;
     font-size: 0.72rem;
     font-weight: 600;
     white-space: nowrap;
@@ -319,17 +319,17 @@ header .subtitle {
 }
 
 .status-verify {
-    background: #cce5ff;
-    color: #004085;
+    background: #d0e8f7;
+    color: #075fa4;
 }
 
 .status-final {
-    background: #d4edda;
-    color: #155724;
+    background: #fef2f2;
+    color: #ec0100;
 }
 
 .status-approved {
-    background: #1e3a5f;
+    background: #075fa4;
     color: white;
 }
 
@@ -342,7 +342,7 @@ header .subtitle {
     padding: 10px 15px;
     background: white;
     border-radius: 8px 8px 0 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .toolbar-left {
@@ -358,6 +358,7 @@ header .subtitle {
 .btn-small {
     padding: 8px 15px;
     font-size: 0.85rem;
+    border-radius: 20px;
 }
 
 /* Column Menu */
@@ -365,7 +366,7 @@ header .subtitle {
     position: absolute;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     z-index: 1000;
     min-width: 250px;
     max-height: 400px;
@@ -379,7 +380,7 @@ header .subtitle {
     padding: 12px 15px;
     border-bottom: 1px solid #eee;
     font-weight: 600;
-    color: #1e3a5f;
+    color: #075fa4;
 }
 
 .btn-close {
@@ -426,7 +427,7 @@ header .subtitle {
 .table-container {
     background: white;
     border-radius: 0 0 8px 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     overflow-x: auto;
     margin-bottom: 20px;
 }
@@ -438,7 +439,7 @@ table {
 }
 
 thead {
-    background: #1e3a5f;
+    background: #075fa4;
     color: white;
 }
 
@@ -464,7 +465,7 @@ th.sortable {
 }
 
 th.sortable:hover {
-    background-color: #2d5a87;
+    background-color: #0a6fc2;
 }
 
 .header-help {
@@ -488,14 +489,14 @@ th.sortable:hover {
 
 .header-help:hover {
     background: rgba(255,255,255,0.6);
-    color: #1e3a5f;
+    color: #075fa4;
 }
 
 /* Custom tooltip box */
 .tooltip-box {
     position: fixed;
     z-index: 9999;
-    background: #1e293b;
+    background: #1a2332;
     color: #e2e8f0;
     padding: 14px 18px;
     border-radius: 8px;
@@ -521,7 +522,7 @@ th.sortable:hover {
 }
 
 .tooltip-box strong {
-    color: #60a5fa;
+    color: #5db1f7;
     font-size: 0.88rem;
     display: block;
     margin-bottom: 4px;
@@ -538,12 +539,12 @@ th .sort-indicator {
 }
 
 th.sort-asc .sort-indicator::after {
-    content: ' ▲';
+    content: ' \25b2';
     opacity: 1;
 }
 
 th.sort-desc .sort-indicator::after {
-    content: ' ▼';
+    content: ' \25bc';
     opacity: 1;
 }
 
@@ -584,7 +585,7 @@ th.sort-desc .sort-indicator::after {
 
 .filter-input:focus {
     outline: none;
-    border-color: #2d5a87;
+    border-color: #075fa4;
 }
 
 .filter-input::placeholder {
@@ -601,7 +602,7 @@ td {
 }
 
 tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #f5f8fc;
 }
 
 tbody tr:last-child td {
@@ -611,7 +612,7 @@ tbody tr:last-child td {
 .item-code {
     font-family: monospace;
     font-weight: 600;
-    color: #2d5a87;
+    color: #075fa4;
 }
 
 .currency {
@@ -625,12 +626,12 @@ tbody tr:last-child td {
 }
 
 .restockable-yes {
-    color: #28a745;
+    color: #075fa4;
     font-weight: 600;
 }
 
 .restockable-no {
-    color: #dc3545;
+    color: #ec0100;
     font-weight: 600;
 }
 
@@ -643,24 +644,24 @@ tbody tr:last-child td {
 .reason-select {
     padding: 6px 10px;
     font-size: 0.82rem;
-    border: 2px solid #e74c3c;
+    border: 2px solid #ec0100;
     border-radius: 4px;
     width: 100%;
     min-width: 0;
     cursor: pointer;
     transition: all 0.2s;
-    background-color: #fff5f5;
+    background-color: #fef2f2;
     box-sizing: border-box;
 }
 
 .reason-select:focus {
     outline: none;
-    border-color: #c0392b;
+    border-color: #c50100;
 }
 
 .reason-select.has-value {
-    border-color: #27ae60;
-    background-color: #eafaf1;
+    border-color: #075fa4;
+    background-color: #e8f4fd;
 }
 
 .disposition-select {
@@ -677,22 +678,22 @@ tbody tr:last-child td {
 
 .disposition-select:focus {
     outline: none;
-    border-color: #2d5a87;
+    border-color: #075fa4;
 }
 
 .disposition-select.invoice-all {
-    border-color: #ffc107;
-    background-color: #fff8e1;
+    border-color: #075fa4;
+    background-color: #e8f4fd;
 }
 
 .disposition-select.invoice-partial {
-    border-color: #17a2b8;
-    background-color: #e3f2fd;
+    border-color: #0a6fc2;
+    background-color: #eef5fc;
 }
 
 .disposition-select.return {
-    border-color: #28a745;
-    background-color: #e8f5e9;
+    border-color: #ec0100;
+    background-color: #fef2f2;
 }
 
 .qty-input {
@@ -707,7 +708,7 @@ tbody tr:last-child td {
 
 .qty-input:focus {
     outline: none;
-    border-color: #2d5a87;
+    border-color: #075fa4;
 }
 
 .qty-input:disabled {
@@ -717,8 +718,8 @@ tbody tr:last-child td {
 }
 
 .qty-input.error {
-    border-color: #dc3545;
-    background-color: #fff5f5;
+    border-color: #ec0100;
+    background-color: #fef2f2;
 }
 
 .toggle-btn {
@@ -726,27 +727,27 @@ tbody tr:last-child td {
     font-size: 0.8rem;
     font-weight: 600;
     border: none;
-    border-radius: 4px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .toggle-yes {
-    background-color: #28a745;
+    background-color: #075fa4;
     color: white;
 }
 
 .toggle-yes:hover {
-    background-color: #218838;
+    background-color: #0a6fc2;
 }
 
 .toggle-no {
-    background-color: #dc3545;
+    background-color: #ec0100;
     color: white;
 }
 
 .toggle-no:hover {
-    background-color: #c82333;
+    background-color: #c50100;
 }
 
 .actions-bar {
@@ -760,18 +761,18 @@ tbody tr:last-child td {
     font-size: 1rem;
     font-weight: 600;
     border: none;
-    border-radius: 6px;
+    border-radius: 25px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .btn-primary {
-    background: #1e3a5f;
+    background: #075fa4;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #2d5a87;
+    background: #0a6fc2;
 }
 
 .btn-primary:disabled {
@@ -780,12 +781,12 @@ tbody tr:last-child td {
 }
 
 .btn-finalize {
-    background: #28a745;
+    background: #ec0100;
     color: white;
 }
 
 .btn-finalize:hover {
-    background: #218838;
+    background: #c50100;
 }
 
 .btn-finalize:disabled {
@@ -796,6 +797,7 @@ tbody tr:last-child td {
 .btn-secondary {
     background: #e9ecef;
     color: #333;
+    border-radius: 25px;
 }
 
 .btn-secondary:hover {
@@ -807,7 +809,7 @@ tbody tr:last-child td {
     padding: 40px;
     text-align: center;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     color: #666;
 }
 
@@ -817,7 +819,7 @@ tbody tr:last-child td {
     bottom: 20px;
     right: 20px;
     padding: 15px 25px;
-    border-radius: 8px;
+    border-radius: 25px;
     color: white;
     font-weight: 500;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -833,15 +835,15 @@ tbody tr:last-child td {
 }
 
 .toast.success {
-    background: #28a745;
+    background: #075fa4;
 }
 
 .toast.error {
-    background: #dc3545;
+    background: #ec0100;
 }
 
 .toast.info {
-    background: #17a2b8;
+    background: #2c2c2c;
 }
 
 /* Confirmation modal */
@@ -860,15 +862,15 @@ tbody tr:last-child td {
 
 .modal-box {
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
     max-width: 480px;
     width: 90%;
     overflow: hidden;
 }
 
 .modal-header {
-    background: #dc3545;
+    background: #ec0100;
     color: white;
     padding: 14px 20px;
     font-weight: 700;
@@ -888,7 +890,7 @@ tbody tr:last-child td {
 
 .modal-body .item-count {
     font-weight: 700;
-    color: #dc3545;
+    color: #ec0100;
 }
 
 .modal-actions {
@@ -904,12 +906,12 @@ tbody tr:last-child td {
 }
 
 .btn-convert {
-    background: #1e3a5f;
+    background: #075fa4;
     color: white;
 }
 
 .btn-convert:hover {
-    background: #2d5a87;
+    background: #0a6fc2;
 }
 
 /* Header Bulk Edit */
@@ -941,7 +943,7 @@ tbody tr:last-child td {
     position: fixed;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     z-index: 2000;
     min-width: 260px;
     overflow: hidden;
@@ -955,7 +957,7 @@ tbody tr:last-child td {
     border-bottom: 1px solid #eee;
     font-weight: 600;
     font-size: 0.85rem;
-    color: #1e3a5f;
+    color: #075fa4;
 }
 
 .bulk-column-menu .bulk-menu-body {
@@ -987,7 +989,7 @@ tbody tr:last-child td {
     display: block;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #1e3a5f;
+    color: #075fa4;
 }
 
 .action-desc {
