@@ -30,7 +30,7 @@
 
 ## Executive Summary
 
-The **Deadstock Management Application** is a single-page web application built for **PTS Solutions** (a division of BTSG) to manage the lifecycle of consignment deadstock inventory held in customer vending machines. The application enables PTS Solutions and their customers to collaboratively review, disposition, and resolve consignment items that are no longer being actively consumed (i.e., "deadstock").
+The **Deadstock Management Application** is a single-page web application built for **PTSolutions** (a division of BTSG) to manage the lifecycle of consignment deadstock inventory held in customer vending machines. The application enables PTSolutions and their customers to collaboratively review, disposition, and resolve consignment items that are no longer being actively consumed (i.e., "deadstock").
 
 The tool supports a multi-step workflow in which customers decide what to do with each deadstock item (keep it, return it, or partially keep it), PTS representatives physically verify and remove inventory, and the customer gives final approval before invoicing. The application features dual view modes (Customer and PTS), role-based field editability, intelligent package-size-aware quantity logic, bulk editing, sortable/filterable data grids, and a complete status-tracking workflow from initial review through final approval and project lock.
 
@@ -40,13 +40,13 @@ The application is designed to connect to a live backend API for production use,
 
 ## Business Context
 
-### What is PTS Solutions?
+### What is PTSolutions?
 
-PTS Solutions is a division of BTSG, an industrial tooling and supply company with over 40 locations throughout the United States and three fully automated distribution centers. PTS Solutions provides inventory management, on-site expert services, welding solutions, fluid machine services, product support, sourcing and procurement, and health and safety products to manufacturing customers.
+PTSolutions is a division of BTSG, an industrial tooling and supply company with over 40 locations throughout the United States and three fully automated distribution centers. PTSolutions provides inventory management, on-site expert services, welding solutions, fluid machine services, product support, sourcing and procurement, and health and safety products to manufacturing customers.
 
 ### What is Consignment Inventory?
 
-Consignment inventory is stock that is physically stored at a customer's site (typically in automated vending machines or cabinets) but remains **owned by the supplier** (PTS Solutions or their vendor partners) until it is consumed. The customer only pays for items as they use them.
+Consignment inventory is stock that is physically stored at a customer's site (typically in automated vending machines or cabinets) but remains **owned by the supplier** (PTSolutions or their vendor partners) until it is consumed. The customer only pays for items as they use them.
 
 ### What is Deadstock?
 
@@ -132,7 +132,7 @@ Deadstock App/
 |-- index.html              # Main HTML page (single page application)
 |-- app.js                  # All application logic (1,552 lines)
 |-- styles.css              # All styling (1,057 lines)
-|-- Screenshots/            # Reference screenshots of PTS Solutions website
+|-- Screenshots/            # Reference screenshots of PTSolutions website
 |   |-- Screenshot 2026-02-11 143904.png   # PTS homepage
 |   |-- Screenshot 2026-02-11 144017.png   # Customer login page
 |   |-- Screenshot 2026-02-11 144043.png   # Total Solutions page
@@ -756,7 +756,7 @@ The application was built iteratively through six commits:
 | 2 | `f6cc1b1` | **Advanced data grid** — Sorting, filtering, column resizing, column visibility toggle |
 | 3 | `c6ef7a4` | **Live API + view modes** — Connect to backend API with dummy data fallback; add Customer/PTS dual view modes |
 | 4 | `2c9cee7` | **Workflow features** — Disposition system, package size logic, bulk editing, final approval workflow, status tracking |
-| 5 | `8bc6a22` | **PTS branding** — Restyled UI to match PTS Solutions brand colors (blue/red); fixed status labels and naming |
+| 5 | `8bc6a22` | **PTS branding** — Restyled UI to match PTSolutions brand colors (blue/red); fixed status labels and naming |
 | 6 | `a332f5b` | **API field fix** — Corrected Min/Max field capitalization to match API JSON exactly |
 
 ---
@@ -797,8 +797,8 @@ The following operations are currently stubbed with `setTimeout` simulations and
 | **Vending Machine** | Automated industrial supply cabinet at the customer site that dispenses consignment items |
 | **VMI** | Vendor Managed Inventory — a replenishment model where stock is manually counted and restocked |
 | **Cabinet** | An automated vending machine that electronically tracks item dispensing |
-| **PTS** | PTS Solutions, the supplier/service provider managing the consignment inventory |
-| **BTSG** | Parent company of PTS Solutions |
+| **PTS** | PTSolutions, the supplier/service provider managing the consignment inventory |
+| **BTSG** | Parent company of PTSolutions |
 | **SiteId** | Unique identifier for a customer location |
 | **StockManagementId** | Unique identifier for a stock management record |
 | **Restock** | The automatic reordering of items when stock falls below the minimum level |
