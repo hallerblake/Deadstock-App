@@ -44,7 +44,8 @@ const UNRETURNABLE_REASON_OPTIONS = [
     { value: 'repackaged', label: 'Items Repackaged' },
     { value: 'missing-packaging', label: 'Missing Packaging' },
     { value: 'missing', label: 'Inventory Missing' },
-    { value: 'damaged', label: 'Inventory Damaged' }
+    { value: 'damaged', label: 'Inventory Damaged' },
+    { value: 'special', label: 'Item is a Special' }
 ];
 
 // View mode configuration
@@ -90,7 +91,8 @@ const COLUMN_TOOLTIPS = {
         + '<em>Items Repackaged</em> &mdash; Items were removed from their original packaging but have been repackaged. They may still be usable but cannot be returned to the supplier in original condition.<br><br>'
         + '<em>Missing Packaging</em> &mdash; The original packaging has been lost or discarded, making the items non-returnable to the supplier. The items themselves may still be present.<br><br>'
         + '<em>Inventory Missing</em> &mdash; The items cannot be physically located in the vending machine or anywhere at the customer site. They may have been consumed without being recorded in the system, or they may have been misplaced.<br><br>'
-        + '<em>Inventory Damaged</em> &mdash; The items are physically damaged (broken, corroded, worn, etc.) and cannot be returned to the supplier or used by the customer.',
+        + '<em>Inventory Damaged</em> &mdash; The items are physically damaged (broken, corroded, worn, etc.) and cannot be returned to the supplier or used by the customer.<br><br>'
+        + '<em>Item is a Special</em> &mdash; The item is a special-order or custom product made specifically for this customer. Special items cannot be returned to the supplier because they have no general resale value.',
     'Status': '<strong>Status</strong><br>Tracks where this line item is in the deadstock review workflow:<br><br>'
         + '<em>Awaiting Customer Action</em> &mdash; The customer has not yet decided what to do with this consignment item. A disposition must be selected.<br><br>'
         + '<em>Pending Stock Verification</em> &mdash; The customer has made their selection. A PTS representative needs to visit the customer site to verify inventory in the vending machine and physically remove any items scheduled for return.<br><br>'
@@ -729,10 +731,14 @@ function handleDispositionChange(itemId, value) {
     } else if (value === 'return') {
         // Customer must keep at least the broken package remainder
         item.QtyToBill = brokenPkgMin;
+        item.QtyRemoved = '';
+        item.UnreturnableReason = '';
     } else if (value === 'invoice-partial') {
         // Snap current QtyToBill to a valid package increment
         const current = item.QtyToBill || 0;
         item.QtyToBill = snapToValidQtyToBill(item, current);
+        item.QtyRemoved = '';
+        item.UnreturnableReason = '';
     }
 
     // Re-render to update field editability and values
@@ -855,7 +861,10 @@ function updateSummary() {
     const totalItems = filteredItems.length;
     const totalValue = filteredItems.reduce((sum, item) => {
         const qtyBill = item.QtyToBill || 0;
-        const qtyUnret = Math.max(0, (item.QtyOnHand || 0) - qtyBill - (item.QtyRemoved || 0));
+        const hasQtyRemoved = item.QtyRemoved !== '' && item.QtyRemoved != null;
+        const qtyUnret = hasQtyRemoved
+            ? Math.max(0, (item.QtyOnHand || 0) - qtyBill - (item.QtyRemoved || 0))
+            : 0;
         return sum + ((qtyBill + qtyUnret) * (item.Price || 0));
     }, 0);
     const pendingDecisions = deadstockItems.filter(item => !item.Disposition).length;
@@ -1286,8 +1295,12 @@ function bulkSetDisposition(value) {
             item.QtyRemoved = 0;
         } else if (value === 'return') {
             item.QtyToBill = brokenPkgMin;
+            item.QtyRemoved = '';
+            item.UnreturnableReason = '';
         } else if (value === 'invoice-partial') {
             item.QtyToBill = snapToValidQtyToBill(item, item.QtyToBill || 0);
+            item.QtyRemoved = '';
+            item.UnreturnableReason = '';
         }
         count++;
     });
